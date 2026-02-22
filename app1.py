@@ -3,27 +3,39 @@ import math
 from PIL import Image
 from fpdf import FPDF
 
-# --- 1. CONFIGURATION DE LA PAGE ---
-st.set_page_config(page_title="FC ELEC - Note de Calcul", layout="centered")
+# --- CONFIGURATION DE LA PAGE ---
+st.set_page_config(page_title="FC ELEC - Dimensionnement", layout="centered")
 
-# --- 2. FONCTION DE SÉCURITÉ ---
+# --- 1. FONCTION DE SÉCURITÉ (LOGIN) ---
 def check_password():
+    """Retourne True si l'utilisateur a saisi le bon mot de passe."""
     def password_entered():
+        """Vérifie les identifiants saisis dans les secrets Streamlit."""
         if st.session_state["username"] in st.secrets["passwords"] and \
            st.session_state["password"] == st.secrets["passwords"][st.session_state["username"]]:
             st.session_state["password_correct"] = True
-            del st.session_state["password"] 
+            del st.session_state["password"]  # Sécurité : on efface le MDP
             del st.session_state["username"]
         else:
             st.session_state["password_correct"] = False
 
     if "password_correct" not in st.session_state:
-        st.image("logoFCELEC.png", width=200)
-        st.title("🔐 Accès Réservé FC ELEC")
-        st.text_input("Identifiant", on_change=password_entered, key="username")
+        # Premier affichage : Formulaire de login
+        st.image("logoFCELEC.png", width=250)
+        st.title("🔐 Accès Restreint FC ELEC")
+        st.text_input("Nom d'utilisateur", on_change=password_entered, key="username")
         st.text_input("Mot de passe", type="password", on_change=password_entered, key="password")
         return False
-    return st.session_state.get("password_correct", True)
+    elif not st.session_state["password_correct"]:
+        # En cas d'erreur de saisie
+        st.image("logoFCELEC.png", width=250)
+        st.error("Utilisateur inconnu ou mot de passe incorrect.")
+        st.text_input("Nom d'utilisateur", on_change=password_entered, key="username")
+        st.text_input("Mot de passe", type="password", on_change=password_entered, key="password")
+        return False
+    else:
+        # Accès validé
+        return True
 
 # --- 3. EXÉCUTION DU CALCULATEUR SI CONNECTÉ ---
 if check_password():
